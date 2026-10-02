@@ -1,0 +1,35 @@
+# ── Python 运行环境 ──────────────────────────────────────────
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# ── 本地配置（运行后会被写入 Fernet 加密的 API Key / 密码，切勿提交）──
+# setup.bat 会自动从 config.release.yaml 生成 config.yaml
+config.yaml
+
+# ── 本地语音识别模型（约 140MB，超 GitHub 单文件 100MB 限制）──
+# src/asr_service.py 首次运行时会自动下载到该目录
+data/models/
+
+# ── 运行期数据与缓存（聊天上下文、去重缓存、语音/图片/歌曲缓存）──
+data/*
+!data/.gitkeep
+logs/*
+!logs/.gitkeep
+
+# ── 日志与临时文件 ──────────────────────────────────────────
+*.log
+*.tmp
+restart-flag.txt
+
+# ── 系统 / 编辑器 ────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/

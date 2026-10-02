@@ -1,0 +1,15 @@
+# 换行符约定：仓库内统一以 LF 存储，检出时按平台处理。
+# Windows 批处理 / VBS 脚本必须保持 CRLF，否则 cmd 可能解析异常。
+* text=auto
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.vbs text eol=crlf
+
+# 二进制文件不做任何转换
+*.jpg binary
+*.png binary
+*.gif binary
+*.zip binary
+*.exe binary
+*.bin binary

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0a1834">
+    <title>聊天机器人 · 微信 / QQ 双端控制台</title>
+    <link rel="stylesheet" href="/static/style.css?v=voice-20260925">
+</head>
+<body>
+    <header>
+        <h1>聊天机器人 · 双端控制台</h1>
+        <div class="header-controls">
+            <span id="ws-status" class="status-dot disconnected"></span>
+            <button id="btn-start-all" class="btn btn-green">全部启动</button>
+            <button id="btn-stop-all" class="btn btn-red">全部停止</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- 平台切换 -->
+        <nav class="platform-tabs" role="tablist" aria-label="平台切换">
+            <button class="platform-tab active" data-platform="wechat" role="tab" type="button">
+                <span class="tab-dot" id="tab-dot-wechat"></span>
+                <span class="tab-title">微信</span>
+                <span class="tab-state" id="tab-state-wechat">未启动</span>
+            </button>
+            <button class="platform-tab" data-platform="qq" role="tab" type="button">
+                <span class="tab-dot" id="tab-dot-qq"></span>
+                <span class="tab-title">QQ 官方机器人</span>
+                <span class="tab-state" id="tab-state-qq">未启用</span>
+            </button>
+            <button class="platform-tab" data-platform="wecom" role="tab" type="button">
+                <span class="tab-dot" id="tab-dot-wecom"></span>
+                <span class="tab-title">企业微信</span>
+                <span class="tab-state" id="tab-state-wecom">未启用</span>
+            </button>
+        </nav>
+
+        <!-- ================= 微信页 ================= -->
+        <section class="platform-page active" id="page-wechat">
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">微信连接</div>
+                    <div id="stat-wx-conn" class="stat-value">未连接</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">AI 引擎</div>
+                    <div id="stat-ai" class="stat-value">未知</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">当前风格</div>
+                    <div id="stat-style" class="stat-value">default</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Token 用量</div>
+                    <div id="stat-tokens" class="stat-value">0</div>
+                </div>
+            </section>
+
+            <div class="two-col">
+                <section class="panel">
+                    <h2>微信实时消息</h2>
+                    <div id="feed-wechat" class="feed"></div>
+                </section>
+
+                <section class="panel">
+                    <h2>微信控制面板</h2>
+
+                    <div class="control-group">
+                        <h3>启停（微信）</h3>
+                        <div class="btn-row">
+                            <button id="btn-start-wx" class="btn btn-green">启动微信</button>
+                            <button id="btn-stop-wx" class="btn btn-red">停止微信</button>
+                        </div>
+                        <div id="wx-result" class="test-result">--</div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>群聊监控</h3>
+                        <div class="group-add-row">
+                            <input
+                                id="group-name-input"
+                                class="text-input"
+                                type="text"
+                                maxlength="100"
+                                autocomplete="off"
+                                placeholder="输入微信中显示的群聊名称"
+                            >
+                            <button id="btn-add-group" class="btn btn-blue">添加</button>
+                        </div>
+                        <div id="group-list" class="group-list">
+                            <div class="group-empty">正在读取监控列表...</div>
+                        </div>
+                        <div id="group-result" class="test-result">--</div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>AI 接口配置（微信 / QQ 共用）</h3>
+                        <label class="field-label" for="config-api-url">API 地址</label>
+                        <input
+                            id="config-api-url"
+                            class="text-input"
+                            type="url"
+                            autocomplete="off"
+                            placeholder="https://api.deepseek.com/v1/chat/completions"
+                        >
+                        <label class="field-label" for="config-api-key">API Key</label>
+                        <input
+                            id="config-api-key"
+                            class="text-input"
+                            type="password"
+                            autocomplete="new-password"
+                            placeholder="已保存，留空则不修改"
+                        >
+                        <label class="field-label" for="config-model">模型</label>
+                        <input
+                            id="config-model"
+                            class="text-input"
+                            type="text"
+                            autocomplete="off"
+                            placeholder="deepseek-chat"
+                        >
+                        <label class="field-label" for="config-api-style">接口类型</label>
+                        <select id="config-api-style">
+                            <option value="auto">自动识别（推荐）</option>
+                            <option value="openai">OpenAI 兼容 / 中转站</option>
+                            <option value="anthropic">Anthropic Messages</option>
+                        </select>
+                        <button id="btn-save-ai" class="btn btn-blue">保存配置</button>
+                        <div id="config-result" class="test-result">正在读取配置...</div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>语言风格</h3>
+                        <select id="style-select"></select>
+                        <button id="btn-apply-style" class="btn btn-blue">应用</button>
+                        <div id="style-lock-note" class="lock-note" hidden></div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>操作</h3>
+                        <div class="btn-row">
+                            <button id="btn-test-api" class="btn btn-orange">测试 API</button>
+                            <button id="btn-clear-ctx-wx" class="btn btn-gray">清除微信上下文</button>
+                        </div>
+                        <div id="test-result" class="test-result">--</div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>安全状态（微信端独立限流）</h3>
+                        <div id="security-status">
+                            <div>熔断器: <span id="sec-circuit">--</span></div>
+                            <div>限流令牌: <span id="sec-tokens">--</span></div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>语音 / 点歌（微信、QQ 双端共用）</h3>
+                        <p class="hint">
+                            群里或私聊发「点歌 青花瓷」「唱首稻香」即可点歌，
+                            发「歌单」看曲库，发「唱歌 + 自己的词」让机器人唱你写的词。
+                            合成结果会缓存，同一首歌再点一次几乎瞬间发出。
+                        </p>
+                        <div class="voice-status" id="voice-status">正在读取语音状态...</div>
+                        <div class="checkbox-row">
+                            <input id="voice-enabled" type="checkbox">
+                            <label for="voice-enabled">启用语音 / 点歌</label>
+                        </div>
+                        <div class="checkbox-row">
+                            <input id="voice-quick" type="checkbox">
+                            <label for="voice-quick">常见寒暄本地秒回（不占用 AI 调用）</label>
+                        </div>
+                        <label class="field-label" for="voice-name">音色</label>
+                        <select id="voice-name">
+                            <option value="zh-CN-XiaoxiaoNeural">晓晓（女声 · 默认）</option>
+                            <option value="zh-CN-XiaoyiNeural">晓伊（女声 · 轻快）</option>
+                            <option value="zh-CN-YunxiNeural">云希（男声）</option>
+                            <option value="zh-CN-YunjianNeural">云健（男声 · 浑厚）</option>
+                            <option value="zh-CN-liaoning-XiaobeiNeural">晓北（东北口音）</option>
+                        </select>
+                        <div class="field-pair">
+                            <div>
+                                <label class="field-label" for="voice-rate">朗读语速</label>
+                                <input id="voice-rate" class="text-input" type="text" placeholder="+0%">
+                            </div>
+                            <div>
+                                <label class="field-label" for="voice-pitch">朗读音调</label>
+                                <input id="voice-pitch" class="text-input" type="text" placeholder="+0Hz">
+                            </div>
+                        </div>
+                        <div class="field-pair">
+                            <div>
+                                <label class="field-label" for="voice-sing-rate">唱腔语速</label>
+                                <input id="voice-sing-rate" class="text-input" type="text" placeholder="+8%">
+                            </div>
+                            <div>
+                                <label class="field-label" for="voice-sing-pitch">唱腔音调</label>
+                                <input id="voice-sing-pitch" class="text-input" type="text" placeholder="+35Hz">
+                            </div>
+                        </div>
+                        <button id="btn-save-voice" class="btn btn-blue">保存语音配置</button>
+                        <div id="voice-result" class="test-result">--</div>
+
+                        <h4 class="sub-title">曲库（<span id="song-count">0</span> 首，<span id="song-cached">0</span> 首已缓存）</h4>
+                        <div id="song-list" class="song-chips">
+                            <div class="group-empty">正在读取曲库...</div>
+                        </div>
+
+                        <h4 class="sub-title">试听（本地生成，不发送）</h4>
+                        <div class="group-add-row">
+                            <input
+                                id="voice-preview-text"
+                                class="text-input"
+                                type="text"
+                                maxlength="60"
+                                autocomplete="off"
+                                placeholder="输入一句想听机器人唱/念的话"
+                            >
+                            <button id="btn-voice-preview" class="btn btn-orange">试听</button>
+                        </div>
+                        <audio id="voice-player" class="voice-player" controls hidden></audio>
+
+                        <h4 class="sub-title">真实歌曲下载源（洛雪音乐服务器）</h4>
+                        <p class="hint">
+                            开启后，「点歌 + 任意歌名」会从你的洛雪服务器下载真实歌曲发送，
+                            曲库里的歌也优先播放原版；下载失败时自动退回机器人哼唱兜底。
+                        </p>
+                        <div class="voice-status" id="music-status">正在读取音乐源状态...</div>
+                        <div class="checkbox-row">
+                            <input id="music-enabled" type="checkbox">
+                            <label for="music-enabled">启用真实歌曲下载</label>
+                        </div>
+                        <label class="field-label" for="music-base-url">服务器地址</label>
+                        <input
+                            id="music-base-url"
+                            class="text-input"
+                            type="text"
+                            autocomplete="off"
+                            placeholder="http://192.168.x.x:9527"
+                        >
+                        <label class="field-label" for="music-password">访问密码</label>
+                        <input
+                            id="music-password"
+                            class="text-input"
+                            type="password"
+                            autocomplete="new-password"
+                            placeholder="已保存，留空则不修改"
+                        >
+                        <label class="field-label" for="music-quality">下载音质</label>
+                        <select id="music-quality">
+                            <option value="128k">128k（小文件，发送最快）</option>
+                            <option value="320k">320k（音质更好）</option>
+                            <option value="flac">flac（无损，文件较大）</option>
+                        </select>
+                        <div class="btn-row">
+                            <button id="btn-save-music" class="btn btn-blue">保存音乐源</button>
+                            <button id="btn-test-music" class="btn btn-orange">测试连接</button>
+                        </div>
+                        <div id="music-result" class="test-result">--</div>
+                    </div>
+                </section>
+            </div>
+        </section>
+
+        <!-- ================= QQ 页 ================= -->
+        <section class="platform-page" id="page-qq">
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">QQ 连接</div>
+                    <div id="stat-qq-conn" class="stat-value">未连接</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">QQ 运行</div>
+                    <div id="stat-qq-run" class="stat-value">未启动</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">已发现会话</div>
+                    <div id="stat-qq-rooms" class="stat-value">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">QQ 队列</div>
+                    <div id="stat-qq-queue" class="stat-value">0</div>
+                </div>
+            </section>
+
+            <div class="two-col">
+                <section class="panel">
+                    <h2>QQ 实时消息</h2>
+                    <div id="feed-qq" class="feed"></div>
+                </section>
+
+                <section class="panel">
+                    <h2>QQ 机器人（开放平台官方接口）</h2>
+
+                    <div class="control-group">
+                        <h3>启停（QQ）</h3>
+                        <div class="btn-row">
+                            <button id="btn-start-qq" class="btn btn-green">启动 QQ</button>
+                            <button id="btn-stop-qq" class="btn btn-red">停止 QQ</button>
+                        </div>
+                        <div id="qq-result" class="test-result">--</div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>开放平台凭证</h3>
+                        <label class="field-label" for="qq-app-id">机器人 AppID</label>
+                        <input
+                            id="qq-app-id"
+                            class="text-input"
+                            type="text"
+                            autocomplete="off"
+                            placeholder="在 QQ 机器人开放平台获取"
+                        >
+                        <label class="field-label" for="qq-secret">AppSecret</label>
+                        <input
+                            id="qq-secret"
+                            class="text-input"
+                            type="password"
+                            autocomplete="new-password"
+                            placeholder="已保存，留空则不修改"
+                        >
+                        <label class="field-label" for="qq-backend">接入方式</label>
+                        <select id="qq-backend">
+                            <option value="official">官方接口（真实 QQ 机器人）</option>
+                            <option value="simulate">模拟后端（无凭证测试用）</option>
+                        </select>
+                        <div class="checkbox-row">
+                            <input id="qq-sandbox" type="checkbox">
+                            <label for="qq-sandbox">使用沙箱环境（sandbox.api.sgroup.qq.com）</label>
+                        </div>
+                        <div class="checkbox-row">
+                            <input id="qq-enabled" type="checkbox">
+                            <label for="qq-enabled">启用 QQ 端</label>
+                        </div>
+                        <button id="btn-save-qq" class="btn btn-blue">保存并应用</button>
+                        <div id="qq-config-result" class="test-result">正在读取配置...</div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>会话监控</h3>
+                        <p class="hint">
+                            留空表示回应所有会话；填入群 openid 可只回应指定群。
+                            群消息需 @ 机器人才能收到。
+                        </p>
+                        <div class="group-add-row">
+                            <input
+                                id="qq-group-input"
+                                class="text-input"
+                                type="text"
+                                maxlength="100"
+                                autocomplete="off"
+                                placeholder="填写群 openid（可留空=全部）"
+                            >
+                            <button id="btn-add-group-qq" class="btn btn-blue">添加</button>
+                        </div>
+                        <div id="qq-group-list" class="group-list">
+                            <div class="group-empty">正在读取监控列表...</div>
+                        </div>
+                        <div id="qq-group-result" class="test-result">--</div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>已发现的会话</h3>
+                        <div id="qq-rooms" class="group-list">
+                            <div class="group-empty">尚未收到 QQ 消息</div>
+                        </div>
+                        <div class="btn-row">
+                            <button id="btn-clear-ctx-qq" class="btn btn-gray">清除 QQ 上下文</button>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>安全状态（QQ 端独立限流）</h3>
+                        <div id="qq-security-status">
+                            <div>熔断器: <span id="qq-sec-circuit">--</span></div>
+                            <div>限流令牌: <span id="qq-sec-tokens">--</span></div>
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <h3>语音 / 点歌</h3>
+                        <p class="hint">
+                            语音设置与微信端共用，在「微信」页里修改。
+                            这里可以直接把一首歌发到某个已发现的 QQ 会话做测试。
+                        </p>
+                        <div class="voice-status" id="qq-voice-status">正在读取语音状态...</div>
+                        <label class="field-label" for="qq-song-room">目标会话</label>
+                        <select id="qq-song-room">
+                            <option value="">（尚未发现会话，请先在 QQ 里给机器人发一条消息）</option>
+                        </select>
+                        <label class="field-label" for="qq-song-pick">选择歌曲</label>
+                        <select id="qq-song-pick"></select>
+                        <div class="btn-row">
+                            <button id="btn-qq-song-play" class="btn btn-green">发送这首歌</button>
+                            <button id="btn-qq-song-random" class="btn btn-orange">随机一首</button>
+                        </div>
+                        <div id="qq-song-result" class="test-result">--</div>
+                    </div>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <!-- ================= 企业微信页 ================= -->
+    <section class="platform-page" id="page-wecom">
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">企业微信连接</div>
+                <div id="stat-wecom-conn" class="stat-value">未连接</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">企业微信运行</div>
+                <div id="stat-wecom-run" class="stat-value">未启动</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">已发现会话</div>
+                <div id="stat-wecom-rooms" class="stat-value">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">企业微信队列</div>
+                <div id="stat-wecom-queue" class="stat-value">0</div>
+            </div>
+        </section>
+
+        <div class="two-col">
+            <section class="panel">
+                <h2>企业微信实时消息</h2>
+                <div id="feed-wecom" class="feed"></div>
+            </section>
+
+            <section class="panel">
+                <h2>企业微信机器人（智能机器人）</h2>
+
+                <div class="control-group">
+                    <h3>启停（企业微信）</h3>
+                    <div class="btn-row">
+                        <button id="btn-start-wecom" class="btn btn-green">启动企业微信</button>
+                        <button id="btn-stop-wecom" class="btn btn-red">停止企业微信</button>
+                    </div>
+                    <div id="wecom-result" class="test-result">--</div>
+                </div>
+
+                <div class="control-group">
+                    <h3>智能机器人凭证</h3>
+                    <label class="field-label" for="wecom-bot-id">Bot ID</label>
+                    <input
+                        id="wecom-bot-id"
+                        class="text-input"
+                        type="text"
+                        autocomplete="off"
+                        placeholder="在「管理工具」→「智能机器人」页面获取"
+                    >
+                    <label class="field-label" for="wecom-secret">Secret</label>
+                    <input
+                        id="wecom-secret"
+                        class="text-input"
+                        type="password"
+                        autocomplete="new-password"
+                        placeholder="已保存，留空则不修改"
+                    >
+                    <label class="field-label" for="wecom-corp-id">CorpID（可选）</label>
+                    <input
+                        id="wecom-corp-id"
+                        class="text-input"
+                        type="text"
+                        autocomplete="off"
+                        placeholder="企业ID，格式：ww开头"
+                    >
+                    <label class="field-label" for="wecom-agent-id">AgentID</label>
+                    <input
+                        id="wecom-agent-id"
+                        class="text-input"
+                        type="text"
+                        autocomplete="off"
+                        placeholder="应用AgentId"
+                    >
+                    <div class="checkbox-row">
+                        <input id="wecom-enabled" type="checkbox">
+                        <label for="wecom-enabled">启用企业微信端</label>
+                    </div>
+                    <button id="btn-save-wecom" class="btn btn-blue">保存并应用</button>
+                    <div id="wecom-config-result" class="test-result">正在读取配置...</div>
+                </div>
+
+                <div class="control-group">
+                    <h3>发送测试</h3>
+                    <p class="hint">
+                        这里可以直接发送一条测试消息到企业微信。
+                    </p>
+                    <label class="field-label" for="wecom-test-msg">测试消息</label>
+                    <input
+                        id="wecom-test-msg"
+                        class="text-input"
+                        type="text"
+                        placeholder="输入测试消息内容"
+                    >
+                    <button id="btn-wecom-test-send" class="btn btn-orange">发送测试消息</button>
+                    <div id="wecom-test-result" class="test-result">--</div>
+                </div>
+            </section>
+        </div>
+    </section>
+    </main>
+
+    <script src="/static/app.js?v=voice-20260925"></script>
+</body>
+</html>

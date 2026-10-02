@@ -1,0 +1,48 @@
+# 微信聊天机器人 - 便携安装配置
+# setup.bat 首次运行时会复制为 config.yaml
+
+demo_mode: false
+
+wechat:
+  backend: "auto"
+  target_groups:
+    - "在此填写你要监控的群名"
+  auto_reply: true
+  reply_delay: 1.5
+  sticker:
+    enabled: true
+    min_interval: 600
+    max_interval: 1200
+
+ai:
+  api_url: "https://你的接口地址/v1"   # 填写 DeepSeek / OpenAI 兼容接口
+  api_key: ""                  # 在这里填写你的 API Key
+  model: "你的模型名"
+  max_tokens: 500
+  temperature: 0.7
+  timeout: 30
+  max_retries: 3
+
+style:
+  active: "tsundere_whale_girl"
+  locked: true
+  locked_name: "tsundere_whale_girl"
+  custom_styles_dir: "./styles/custom/"
+
+security:
+  rate_limit: 20
+  circuit_breaker_threshold: 5
+  circuit_breaker_timeout: 300
+  max_queue_size: 100
+  password: ""
+
+web:
+  enabled: true
+  host: "127.0.0.1"
+  port: 8080
+
+logging:
+  level: "INFO"
+  file: "./logs/chatbot.log"
+  rotation: "10 MB"
+  retention: "7 days"

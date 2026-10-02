@@ -1,0 +1,182 @@
+微信鲸鱼娘机器人 - AI 自动部署说明
+================================================
+
+推荐先阅读：先看我-安装使用说明书.txt
+给 WorkBuddy 或其它 AI 的现成提示词：给AI的一键部署指令.txt
+
+推荐的一键安装脚本：一键安装所有依赖.bat
+推荐的防崩溃启动脚本：一键启动机器人-防崩溃.bat
+可选开机自启脚本：安装开机自启-防崩溃.bat
+
+本文件用于安装脚本失败时，让人工智能或技术人员按固定步骤自动部署。
+仅支持 Windows 10 / Windows 11 64 位系统。
+
+
+一、部署目标
+
+1. 使用 Python 3.12 创建项目内独立环境 .venv。
+2. 安装 requirements.windows.txt 中的核心依赖。
+3. 尝试安装 requirements.wxauto3.txt。此项仅微信 3.9.x 需要；
+   安装失败不影响微信 4.x。
+4. 保留 config.yaml。API 地址、API Key、模型名称默认均为空。
+5. 用户通过 WebUI 填写 AI 配置，不需要修改源码。
+6. 启动时只连接用户已登录且可见的微信窗口，机器人不负责微信登录。
+
+
+二、目录准备
+
+1. 将压缩包完整解压到固定目录，例如：
+
+   D:\鲸鱼娘
+
+2. 不要在压缩包内部直接运行，不要放在会同步删除的临时目录。
+3. 路径可以包含中文，但不建议包含特殊引号字符。
+
+
+三、标准自动部署命令
+
+打开 PowerShell，进入解压后的项目目录，依次执行：
+
+   cd D:\鲸鱼娘
+   py -3.12 -m venv .venv
+   .\.venv\Scripts\python.exe -m ensurepip --upgrade
+   .\.venv\Scripts\python.exe -m pip install --upgrade pip wheel
+   .\.venv\Scripts\python.exe -m pip install --no-cache-dir -r requirements.windows.txt
+   .\.venv\Scripts\python.exe -m pip install --no-cache-dir -r requirements.wxauto3.txt
+
+如果最后一条命令因为 GitHub 网络失败，可以记录警告后继续。微信 4.x
+会使用 wechatauto-replica 和 wxauto4，不依赖可选的 wxauto 3.9 后端。
+
+如果 pip 默认源很慢或失败，使用清华镜像安装核心依赖：
+
+   .\.venv\Scripts\python.exe -m pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.windows.txt
+
+
+四、未安装 Python 3.12 时
+
+优先由 winget 自动安装：
+
+   winget install -e --id Python.Python.3.12 --scope user --silent --accept-package-agreements --accept-source-agreements
+
+winget 不可用时，从以下地址安装 64 位 Python 3.12：
+
+   https://www.python.org/downloads/windows/
+
+安装时务必勾选：
+
+   Add Python to PATH
+
+也可以直接运行项目内的“一键安装依赖.bat”。该脚本会尝试自动安装
+Python 3.12、创建 .venv、安装依赖并验证核心模块。
+
+
+五、部署完成后的验证命令
+
+执行以下命令，全部通过即表示运行环境正常：
+
+   .\.venv\Scripts\python.exe -c "import PySide6; print('PySide6 OK')"
+   .\.venv\Scripts\python.exe -c "import fastapi, uvicorn, httpx; print('Web OK')"
+   .\.venv\Scripts\python.exe -c "import yaml, cryptography, loguru, PIL, psutil; print('Core OK')"
+   .\.venv\Scripts\python.exe -c "import wechatauto, wxauto4; print('WeChat4 OK')"
+   .\.venv\Scripts\python.exe -c "import faster_whisper, pysilk; print('ASR OK')"
+   .\.venv\Scripts\python.exe -m py_compile main.py supervisor.py web_main.py
+
+PowShell 执行策略如果阻止脚本运行，可仅对当前进程放行：
+
+   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+
+
+六、填写 API 配置
+
+推荐使用 WebUI：
+
+1. 双击 start-web.bat。
+2. 浏览器打开 http://127.0.0.1:8080/
+3. 在“AI 接口配置”中填写：
+
+   API 地址：OpenAI 兼容完整地址，或中转站给出的 Base URL
+   API Key：用户自己的密钥
+   模型：接口实际支持的模型名称
+   接口类型：通常选择“自动识别”
+
+4. 点击“保存配置”。
+5. 点击“测试 API”，确认返回成功。
+6. 在“群聊监控”中添加要监听的微信群名称。
+
+API 字段也可以在 config.yaml 中填写，但首次保存后 API Key 会被加密。
+发布包内的 config.yaml 默认不含任何真实密钥。
+
+语音识别配置位于 config.yaml 的 asr 段。发布包会附带
+data\models\faster-whisper\base 本地模型，正常无需联网下载。
+如果该目录缺失，程序会在首次启动时通过 hf-mirror.com 下载 base 模型。
+
+
+七、启动和停止
+
+桌面模式：
+
+   start.bat
+
+仅网页模式：
+
+   start-web.bat
+
+无命令行窗口的网页模式：
+
+   start-web-hidden.vbs
+
+start.bat 会启动看门狗；程序崩溃或无响应时会自动重启。
+机器人界面正常关闭后，看门狗也会退出。
+
+
+八、启动前检查
+
+1. 用户已经安装并登录 Windows 微信 4.x。
+2. 微信主窗口处于可见状态，不要最小化。
+3. 未登录微信时，机器人无法连接，也不会代替用户登录。
+4. WebUI 的 API 测试必须成功。
+5. 群聊监控名称必须与微信中显示的群名一致。
+
+
+九、日志和诊断
+
+logs\chatbot.log       正常聊天、连接、回复日志
+logs\supervisor.log    看门狗启动、崩溃和重启记录
+logs\errors.log        永久追加错误日志，不覆盖、不主动删除
+logs\console.log       控制台输出记录
+runtime\bot.heartbeat  看门狗心跳文件
+
+排查顺序：
+
+1. 先在 errors.log 搜索最近的 “=== START ===”。
+2. 查看 START 标记之后的第一条 ERROR 和完整堆栈。
+3. 检查 logs\supervisor.log 是否有重复启动、端口占用或无响应重启。
+4. 检查微信是否登录、窗口是否可见、版本是否为 4.x。
+5. 在 WebUI 点击“测试 API”，确认不是 API 配置或网络问题。
+
+
+十、常见故障
+
+问题：一键安装时提示没有 Python 3.12。
+处理：运行 winget 安装命令，或手动安装 Python 3.12 并勾选 Add Python to PATH。
+
+问题：pip 下载超时。
+处理：检查代理，或使用清华镜像重新执行核心依赖安装命令。
+
+问题：wxauto 3.9 可选依赖安装失败。
+处理：如果使用微信 4.x，可忽略；微信 3.9.x 才需要该依赖。
+
+问题：WebUI 打不开。
+处理：确认 8080 端口未被占用，检查 config.yaml 中 web.port。
+
+问题：微信显示已连接但机器人不回复。
+处理：确认明确 @ 机器人、群名在监控列表中、API 测试成功。
+
+问题：语音消息没有回复。
+处理：确认 asr.enabled=true，并检查 data\models\faster-whisper\base
+      中是否存在 model.bin、config.json、tokenizer.json、vocabulary.txt。
+      如果缺少文件，重新解压发布包或重新运行一键安装依赖.bat。
+
+问题：机器人重启后仍崩溃。
+处理：不要反复双击 start.bat；先读取 logs\errors.log 的最后一组堆栈，
+      修复后再启动，避免多个看门狗同时操作微信。

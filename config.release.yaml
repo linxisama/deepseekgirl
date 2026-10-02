@@ -1,0 +1,127 @@
+# 微信聊天机器人发布版配置
+# API 地址、API Key、模型名称默认留空，首次使用时在 WebUI 中填写。
+
+demo_mode: false
+
+ai:
+  api_key: ''
+  api_key_encrypted: ''
+  api_style: auto
+  api_url: ''
+  fast_reply_fallback: true
+  fast_reply_timeout: 1.2
+  max_retries: 2
+  max_tokens: 60
+  model: ''
+  temperature: 0.7
+  timeout: 10
+
+asr:
+  beam_size: 1
+  cache_dir: ./data/voice_inbox
+  compute_type: int8
+  cpu_threads: 4
+  enabled: true
+  hf_endpoint: https://hf-mirror.com
+  language: zh
+  max_audio_mb: 20.0
+  model: base
+  model_dir: ./data/models/faster-whisper
+
+logging:
+  file: ./logs/chatbot.log
+  level: INFO
+  retention: 7 days
+  rotation: 10 MB
+
+security:
+  circuit_breaker_threshold: 8
+  circuit_breaker_timeout: 5
+  max_queue_size: 100
+  password: ''
+  rate_limit: 20
+
+style:
+  active: tsundere_whale_girl
+  custom_styles_dir: ./styles/custom/
+  locked: true
+  locked_name: tsundere_whale_girl
+
+web:
+  enabled: true
+  host: 127.0.0.1
+  port: 8080
+
+wechat:
+  ai_context_messages: 12
+  answered_cache_file: ./data/answered_questions.json
+  auto_reply: true
+  auto_start: true
+  backend: auto
+  computer_issue_timeout: 8
+  computer_max_tokens: 600
+  context_file: ./data/conversation_contexts.json
+  context_history: 50
+  dedupe_window: 21600
+  group_reply_limit: 6
+  group_reply_window: 60
+  image_search:
+    cache_dir: ./data/images
+    enabled: true
+    timeout: 3.0
+  listen_private: true
+  max_message_age: 600
+  poke_cooldown: 3
+  proactive:
+    enabled: true
+    end_hour: 20
+    groups: []
+    interval_hours: 2
+    start_hour: 8
+    timeout: 8.0
+  reply_delay: 0.0
+  sticker:
+    enabled: true
+    max_interval: 1200
+    min_interval: 600
+    random_schedule: false
+    reply_interval: 3
+    reply_sticker_count: 3
+  target_groups: []
+  trigger_keywords:
+  - 大肥鲸
+  - deepseek
+  - 鲸鱼娘
+  - 吃大米
+  - token不够用了
+  - 小深
+  - 蓝鲸酱
+  - 小鲸鱼
+  - 出来
+  - 在不在
+  - 啥子
+  - 做啥子
+  - 在干嘛
+  - 说啥呢
+  - 咋样了
+  - 冒个泡
+  - 开饭了
+  - 大米饭
+  - 干饭了
+  - 煲仔饭
+  - 投喂
+  - 帮帮我
+  - 救一下
+  - 别摸鱼
+  - 别睡了
+  - 写代码
+  - 干活了
+  - 摸尾巴
+  - 摸摸头
+  - 拍水花
+  - 变胖了
+  - 该减肥
+  - 好圆啊
+  - 咕嘟嘟
+  user_burst_cooldown: 3
+  user_reply_timeout: 20

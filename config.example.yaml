@@ -1,0 +1,55 @@
+# 微信聊天机器人 - 配置文件示例
+# 复制此文件为 config.yaml 并填入你的实际配置
+
+# Demo 模式（无需微信连接，模拟消息收发，用于测试）
+demo_mode: false
+
+# 微信配置
+wechat:
+  backend: "auto"             # auto / wechatauto（微信 4.x） / wxauto（微信 3.9）
+  target_groups:              # 监控的群聊名称列表（微信中显示的群聊名称）
+    - "我的测试群"
+  auto_reply: true            # 是否自动回复
+  reply_delay: 1.5            # 回复延迟（秒），模拟人类打字
+  sticker:                     # 不定时随机发送收藏表情
+    enabled: true
+    min_interval: 600          # 最短间隔（秒）
+    max_interval: 1200         # 最长间隔（秒）
+
+# AI 配置
+ai:
+  api_url: "https://api.example.com/v1/chat/completions"  # OpenAI 兼容接口
+  api_key: "sk-your-api-key-here"    # 首次运行时填写明文，程序会自动加密
+  model: "gpt-4"              # 模型名称
+  max_tokens: 500             # 最大回复长度
+  temperature: 0.7            # 创造性（0-2）
+  timeout: 30                 # 请求超时（秒）
+  max_retries: 3              # 最大重试次数
+
+# 风格配置
+style:
+  active: "tsundere_whale_girl"  # 固定人设，程序会强制锁定并写回此值
+  locked: true                   # 人设永久锁定，不要修改
+  locked_name: "tsundere_whale_girl"
+  custom_styles_dir: "./styles/custom/"  # 自定义风格目录
+
+# 安全配置
+security:
+  rate_limit: 20              # 每分钟最大 AI 调用次数
+  circuit_breaker_threshold: 5    # 连续失败 N 次触发熔断
+  circuit_breaker_timeout: 300    # 熔断恢复时间（秒）
+  max_queue_size: 100         # 消息队列最大长度
+  password: ""                # 加密密码（留空则使用机器码）
+
+# Web 仪表盘
+web:
+  enabled: true
+  host: "127.0.0.1"           # 监听地址（仅本地访问）
+  port: 8080                  # 端口号
+
+# 日志
+logging:
+  level: "INFO"               # DEBUG/INFO/WARNING/ERROR
+  file: "./logs/chatbot.log"
+  rotation: "10 MB"           # 日志轮转大小
+  retention: "7 days"         # 日志保留时间

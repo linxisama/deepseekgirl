@@ -1,0 +1,2 @@
+# 仅微信 3.9.x 兼容后端需要；微信 4.x 可不安装。
+wxauto @ https://github.com/cluic/wxauto/archive/refs/heads/main.zip
